@@ -1,0 +1,10 @@
+F:\competition\smart car\other\serialcom\serialcom\bin\Debug\serialcom.exe.config
+F:\competition\smart car\other\serialcom\serialcom\bin\Debug\serialcom.exe
+F:\competition\smart car\other\serialcom\serialcom\bin\Debug\serialcom.pdb
+F:\competition\smart car\other\serialcom\serialcom\obj\Debug\serialcom.csprojResolveAssemblyReference.cache
+F:\competition\smart car\other\serialcom\serialcom\obj\Debug\serialcom.Form1.resources
+F:\competition\smart car\other\serialcom\serialcom\obj\Debug\serialcom.Properties.Resources.resources
+F:\competition\smart car\other\serialcom\serialcom\obj\Debug\serialcom.csproj.GenerateResource.Cache
+F:\competition\smart car\other\serialcom\serialcom\obj\Debug\serialcom.csproj.CoreCompileInputs.cache
+F:\competition\smart car\other\serialcom\serialcom\obj\Debug\serialcom.exe
+F:\competition\smart car\other\serialcom\serialcom\obj\Debug\serialcom.pdb
