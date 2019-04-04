@@ -18,10 +18,39 @@ namespace serialcom
     
     public partial class Form1 : Form
     {
+        class readparater
+        {
+            public int temp_value;
 
+            public string modeget = "";
+            public int first_count;
+            public int count=0;
+            public int mode_set = 0;
+            public byte[] numberget;
+            public readparater(int start = 4)
+            {
+                temp_value = 0;
+                
+                first_count = start;
+                count = 0;
+                mode_set = 0;
+                modeget = "";
+                numberget = new byte[4];
+            }
+            public void resetnum(int start)
+            {
+                count = 0;
+                first_count = start;
+                
+            }
+           
+        }
+       
+       
         const int Mode_control =0;
         const int Mode_set = -1;
         const int Mode_read = 1;
+        
         //serial通用变量
         private SerialPort comm = new SerialPort();
         private StringBuilder builder = new StringBuilder();//避免在事件处理方法中反复的创建，定义到外面。  
@@ -38,7 +67,7 @@ namespace serialcom
             InitializeComponent();
 
         }
-
+        
         private void Form1_Load(object sender, EventArgs e)
         {
 
@@ -58,12 +87,32 @@ namespace serialcom
             comm.RtsEnable = false;//reset功能
             comport.Enabled = true;
             baud.Enabled = true;
+            
             comm.DataReceived += comm_DataReceived;//添加事件注册(这里的comm_DataReceived是接受函数)
 
         }
+        //将这些设为全局变量
+        int i_flag = 0;
+       
+        int set_value = 0;
+      
+        int[] info_oprg= new int[10];
+        int[] info_chrg_17 = new int[10];
+        int[] info_chrg_18 = new int[10];
+        string[] op_dec = new string[7];
+        string[] ch_dec = new string[10];
+        readparater elec_static=new readparater();//实例化一个类来实现读取
+        readparater ele_dynamic_A = new readparater();
+        readparater time_dynamic_A = new readparater(8);
+        readparater ele_dynamic_B = new readparater(10);
+        readparater time_dynamic_B = new readparater(14);
+        readparater info_V = new readparater();
+        readparater info_A = new readparater(8);
+        readparater info_W = new readparater(12);
         void comm_DataReceived(object sender, SerialDataReceivedEventArgs e)
         {
-           
+
+            
             if (Closing_new == true)
                 return;
             try
@@ -75,38 +124,394 @@ namespace serialcom
                 received_count += n;//增加接收计数  
                 builder.Clear();//清除字符串构造器的内容  
                 string hexstring = "";
+                string moderead = "";
+                byte[] kankan = new byte[4];//
+                string dynamic_mode = "";
+                string set_word = "";
+                int test_mode = 0;
+                int[] info_oprg1 = new int[10];
+                int check_num = 0;
                 this.Invoke((EventHandler)(delegate//因为要访问ui资源，所以需要使用invoke方式同步ui。  
                 {
                     //string str = a[0].ToString();
                     //builder.Append(str);
-                    if(deccheck.Checked)
+                   
+                    if (deccheck.Checked)
                     {
-                        string checkworng = "";
-                        int i = 0;
-                        foreach(byte b in Received_bytes)
-                        {
-                            i++;
-                           
-                            hexstring += b.ToString("X2");
 
-                            if(i==3)
+
+                       
+                      
+                        foreach (byte b in Received_bytes)
+                        {
+                            if(i_flag>=26)
                             {
-                                checkworng = b.ToString("X2");
-                                int value = Convert.ToInt32(checkworng, 16);
-                                if (value == 144)
+                                i_flag = 0;
+                            }
+                            i_flag++;
+                            if(i_flag==3)
+                            {
+                                set_word = b.ToString("X2");
+                                set_value = Convert.ToInt32(set_word, 16);
+                            }
+                           
+                            if (set_value == 18)
+                            {
+                                recevie_verify(b, i_flag);
+                            }
+                          //静态电类值读取
+                            if (set_value==35|| set_value==37||set_value==39|| set_value == 43|| set_value == 45|| set_value == 47|| set_value == 49||set_value==79)
+                            { 
+                                
+                                check_num = i_flag;
+                                if (i_flag == elec_static.first_count)
                                 {
-                                    MessageBox.Show(b.ToString("X2"));
+                                    elec_static.first_count++;
+                                    if (elec_static.count < 4)
+                                    {
+                                        elec_static.numberget[elec_static.count] = b;
+                                    
+                                        elec_static.count++;
+                                    }
+                                }
+                             
+                                if (i_flag ==25)
+                                {
+                                  
+                                    elec_static.count = 0;
+                                    elec_static.first_count = 4;
+                                    kankan = elec_static.numberget;
+                                    elec_static.temp_value = BitConverter.ToInt32(elec_static.numberget, 0);
+                                    switch(set_value)
+                                    {
+                                        case 35:
+                                            MessageBox.Show("最大输入电压:" + elec_static.temp_value.ToString() + "(1mV)");
+                                            break;
+                                        case 37:
+                                            MessageBox.Show("最大输入电流:" + elec_static.temp_value.ToString() + "(0.1mA)");
+                                            break;
+                                        case 39:
+                                            MessageBox.Show("最大输入功率:" + elec_static.temp_value.ToString() + "(1mW)");
+                                            break;
+                                        case 43:
+                                            MessageBox.Show("定电流值:" + elec_static.temp_value.ToString() + "(0.1mA)");
+                                            break;
+                                        case 45:
+                                            MessageBox.Show("定电压值:" + elec_static.temp_value.ToString() + "(1mV)");
+                                            break;
+                                        case 47:
+                                            MessageBox.Show("定功率值:" + elec_static.temp_value.ToString() + "(1mW)");
+                                            break;
+                                        case 49:
+                                            MessageBox.Show("定电阻值:" + elec_static.temp_value.ToString() + "(1mR)");
+                                            break;
+                                        case 79:
+                                            MessageBox.Show("在定电压模式下的最小电压值:" + elec_static.temp_value.ToString() + "(1mV)");
+                                            break;
+
+                                    }
+                                       
+                                    //hexstring = "最大输入电压:" + temp_value.ToString() + "mV";
+                                }
+
+                            }
+                            //模式读取
+                            if(set_value==41||set_value==87)
+                            {
+                                if(i_flag==4)
+                                {
+                                    moderead= b.ToString("X2");
+                                    test_mode = Convert.ToInt32(moderead, 16);
+                                    switch (set_value)
+                                    {
+                                        case 41:
+                                            switch (test_mode)
+                                            {
+                                                case 0:
+                                                    MessageBox.Show("负载模式为：CC");
+                                                    break;
+                                                case 1:
+                                                    MessageBox.Show("负载模式为：CV");
+                                                    break;
+                                                case 2:
+                                                    MessageBox.Show("负载模式为：CW");
+                                                    break;
+                                                case 3:
+                                                    MessageBox.Show("负载模式为：CR");
+                                                    break;
+
+                                            }
+                                            break;
+                                        case 87:
+                                            switch (test_mode)
+                                            {
+                                                case 0:
+                                                    MessageBox.Show("远程测量模式关闭");
+                                                    break;
+                                                case 1:
+                                                    MessageBox.Show("远程测量模式打开");
+                                                    break;
+                                            }
+
+                                            break;
+                                    }
+                                }
+                            
+
+                            }
+                            //动态参数读取
+                            if(set_value==51|| set_value==53||set_value==55||set_value==57)
+                            {
+                                if(i_flag== ele_dynamic_A.first_count)
+                                {
+                                    if(ele_dynamic_A.first_count<8)
+                                        ele_dynamic_A.first_count++;
+                                    
+                                    if(ele_dynamic_A.count<4)
+                                    {  
+                                        ele_dynamic_A.numberget[ele_dynamic_A.count] = b;
+                                        ele_dynamic_A.count++;
+                                        
+                                    }
+                                }
+                                if(i_flag==time_dynamic_A.first_count)
+                                {
+                                    if (time_dynamic_A.first_count < 10)
+                                        time_dynamic_A.first_count++;
+                                    if(time_dynamic_A.count<2)
+                                    {
+                                        time_dynamic_A.numberget[2] = 0;
+                                        time_dynamic_A.numberget[3] = 0;
+                                        time_dynamic_A.numberget[time_dynamic_A.count] = b;
+                                        time_dynamic_A.count++;
+                                       
+                                    }
+                                }
+                                if (i_flag == ele_dynamic_B.first_count)
+                                {
+                                    if(ele_dynamic_B.first_count<14)
+                                        ele_dynamic_B.first_count++;
+                                    if (ele_dynamic_B.count < 4)
+                                    {
+                                        ele_dynamic_B.numberget[ele_dynamic_B.count] = b;
+                                        ele_dynamic_B.count++;
+                                        
+                                    }
+                                }
+                                if (i_flag == time_dynamic_B.first_count)
+                                {
+                                    if(time_dynamic_B.first_count<16)
+                                      time_dynamic_B.first_count++;
+                                    if (time_dynamic_B.count < 2)
+                                    {
+                                        time_dynamic_B.numberget[2] = 0;
+                                        time_dynamic_B.numberget[3] = 0;
+                                        time_dynamic_B.numberget[time_dynamic_B.count] = b;
+                                        time_dynamic_B.count++;
+                                       
+                                    }
+                                }
+                                if(i_flag==16)//模式读取
+                                {
+                                    ele_dynamic_B.modeget = b.ToString("X2");
+                                    ele_dynamic_B.mode_set = Convert.ToInt32(ele_dynamic_B.modeget, 16);
+                                }
+                                
+                                if(i_flag==25)
+                                {
+                                    ele_dynamic_A.resetnum(4);
+                                    time_dynamic_A.resetnum(8);
+                                    ele_dynamic_B.resetnum(10);
+                                    time_dynamic_B.resetnum(14);
+                                    ele_dynamic_A.temp_value= BitConverter.ToInt32(ele_dynamic_A.numberget, 0);
+                                    time_dynamic_A.temp_value = BitConverter.ToInt32(time_dynamic_A.numberget, 0);
+                                    ele_dynamic_B.temp_value= BitConverter.ToInt32(ele_dynamic_B.numberget, 0);
+                                    time_dynamic_B.temp_value = BitConverter.ToInt32(time_dynamic_B.numberget, 0);
+                                     if(ele_dynamic_B.mode_set==0)
+                                    {
+                                        dynamic_mode = "CONTINUES";
+                                    }
+                                     else if(ele_dynamic_B.mode_set==1)
+                                    {
+                                        dynamic_mode = "PULSE";
+                                    }
+                                    else if(ele_dynamic_B.mode_set==2)
+                                    {
+                                        dynamic_mode = "TOGGLED";
+                                    }
+                                    switch (set_value)
+                                    {
+                                        case 51:
+                                            MessageBox.Show("电流A设定值：" + ele_dynamic_A.temp_value.ToString() + "(0.1mA)\n" +
+                                                            "电流A时间值：" + time_dynamic_A.temp_value.ToString() + "(0.1MS)\n" +
+                                                             "电流B设定值：" + ele_dynamic_B.temp_value.ToString() + "(0.1mA)\n" +
+                                                             "电流B时间值：" + time_dynamic_B.temp_value.ToString() + "(0.1MS)\n" +
+                                                             "操作模式：" + dynamic_mode);
+                                            break;
+                                        case 53:
+                                            MessageBox.Show("电压A设定值：" + ele_dynamic_A.temp_value.ToString() + "(1mV)\n" +
+                                                           "电压A时间值：" + time_dynamic_A.temp_value.ToString() + "(0.1MS)\n" +
+                                                            "电压B设定值：" + ele_dynamic_B.temp_value.ToString() + "(1mV)\n" +
+                                                            "电压B时间值：" + time_dynamic_B.temp_value.ToString() + "(0.1MS)\n" +
+                                                            "操作模式：" + dynamic_mode);
+                                            break;
+                                        case 55:
+                                            MessageBox.Show("功率A设定值：" + ele_dynamic_A.temp_value.ToString() + "(1mW)\n" +
+                                                           "功率A时间值：" + time_dynamic_A.temp_value.ToString() + "(0.1MS)\n" +
+                                                            "功率B设定值：" + ele_dynamic_B.temp_value.ToString() + "(1mW)\n" +
+                                                            "功率B时间值：" + time_dynamic_B.temp_value.ToString() + "(0.1MS)\n" +
+                                                            "操作模式：" + dynamic_mode);
+                                            break;
+                                        case 57:
+                                            MessageBox.Show("电阻A设定值：" + ele_dynamic_A.temp_value.ToString() + "(1mR)\n" +
+                                                           "电阻A时间值：" + time_dynamic_A.temp_value.ToString() + "(0.1MS)\n" +
+                                                            "电阻B设定值：" + ele_dynamic_B.temp_value.ToString() + "(1mR)\n" +
+                                                            "电阻B时间值：" + time_dynamic_B.temp_value.ToString() + "(0.1MS)\n" +
+                                                            "操作模式：" + dynamic_mode);
+                                            break;
+
+                                    }
+
+
+                                  
+                         
                                 }
                             }
+                            //负载相关输入信息
+                            if(set_value==95)
+                            {
+                                if (i_flag == info_V.first_count)
+                                {
+                                    if (info_V.first_count < 8)
+                                        info_V.first_count++;
+                                    if (info_V.count < 4)
+                                    {
+                                        info_V.numberget[info_V.count] = b;
+                                        info_V.count++;
+                                    }
+                                }
+                                if (i_flag==info_A.first_count)
+                                {
+                                    if (info_A.first_count < 12)
+                                        info_A.first_count++;
+
+                                    if (info_A.count < 4)
+                                    {
+                                        info_A.numberget[info_A.count] = b;
+                                        info_A.count++;
+
+                                    }
+                                }
+
+                                
+                                if(i_flag==info_W.first_count)
+                                {
+                                    if (info_W.first_count < 16)
+                                        info_W.first_count++;
+                                    if(info_W.count<4)
+                                    {
+                                        info_W.numberget[info_W.count] = b;
+                                        info_W.count++;
+                                    }
+                                }
+                                if(i_flag==16)
+                                {
+                                    int i = 0;
+                                    int j = 0;
+                                    
+                                    for(i=0, j = 1; i <8;i++)
+                                    {
+                                        if(j<=128)
+                                        {
+                                            info_oprg[i] = (b & j) == j ? 1 : 0;
+                                        }
+                                        j *= 2;
+
+                                    }
+                                    info_oprg1 = info_oprg;
+                                }
+                               if(i_flag==17)
+                                {
+                                    int i = 0;
+                                    int j = 0;
+
+                                    for (i = 0, j = 1; i < 8; i++)
+                                    {
+                                        if (j <= 128)
+                                        {
+                                            info_chrg_17[i] = (b & j) == j ? 1 : 0;
+                                        }
+                                        j *= 2;
+
+                                    }
+                                }
+                                if (i_flag == 18)
+                                {
+                                    int i = 0;
+                                    int j = 0;
+
+                                    for (i = 0, j = 1; i < 8; i++)
+                                    {
+                                        if (j <= 128)
+                                        {
+                                            info_chrg_18[i] = (b & j) == j ? 1 : 0;
+                                        }
+                                        j *= 2;
+
+                                    }
+                                }
+                                if(i_flag==25)
+                                {
+                                    info_V.resetnum(4);
+                                    info_A.resetnum(8);
+                                    info_W.resetnum(12);
+                                    info_V.temp_value = BitConverter.ToInt32(info_V.numberget, 0);
+                                    info_A.temp_value= BitConverter.ToInt32(info_A.numberget, 0);
+                                    info_W.temp_value = BitConverter.ToInt32(info_W.numberget, 0);
+                                    op_dec = info_opstr(info_oprg);
+                                    ch_dec = info_chstr(info_chrg_17, info_chrg_18);
+                                    MessageBox.Show("输入电压：" + info_V.temp_value.ToString() + "(1mV)\n" +
+                                                    "输入电流：" + info_A.temp_value.ToString() + "(0.1mA)\n" +
+                                                    "输入功率：" + info_W.temp_value.ToString() + "(1mW)\n" +
+                                                    "操作状态寄存器：" + op_dec[0] + "   " + "查询状态寄存器：" + ch_dec[0] + "\n" +
+                                                    "操作状态寄存器：" + op_dec[1] + "   " + "查询状态寄存器：" + ch_dec[1] + "\n" +
+                                                    "操作状态寄存器：" + op_dec[2] + "    " + "查询状态寄存器：" + ch_dec[2] + "\n" +
+                                                    "操作状态寄存器：" + op_dec[3] + "   " + "查询状态寄存器：" + ch_dec[3] + "\n" +
+                                                    "操作状态寄存器：" + op_dec[4] + "   " + "查询状态寄存器：" + ch_dec[4] + "\n" +
+                                                    "操作状态寄存器：" + op_dec[5] + "   " + "查询状态寄存器：" + ch_dec[5] + "\n" +
+                                                    "操作状态寄存器：" + op_dec[6] + "   " + "查询状态寄存器：" + ch_dec[6] + "\n" +
+                                                      "                                    "+"查询状态寄存器：" + ch_dec[7] + "\n" +
+                                                        "                                    "+"查询状态寄存器：" + ch_dec[8] + "\n" +
+                                                         "                                   "+"查询状态寄存器：" + ch_dec[9]);
+
+
+                                }
+
+
+
+                            }
+
+                            hexstring += b.ToString("X2");
+                           
                             
+
+
+
+
+
                         }
-                    
-                       
+                      
                         
-                        //  MessageBox.Show("出错！");
+                          
+                        
                      
-                        
-                       
+
+
+
+                        //  MessageBox.Show("出错！");
+
+
+
                         //int value = Convert.ToInt32(hexstring, 16);
                         builder.Append(hexstring);
 
@@ -141,7 +546,73 @@ namespace serialcom
             }
            
         }
+        public string[] info_opstr(int[] num)
+        {
+            string[] numtoinfo = new string[7];
+            numtoinfo[0] = "CAL=" + num[0].ToString();//因为是小端模式的，所以需要反序。
+            numtoinfo[1] = "WTG=" + num[1].ToString();
+            numtoinfo[2] = "REM=" + num[2].ToString();
+            numtoinfo[3] = "OUT=" + num[3].ToString();
+            numtoinfo[4] = "LOCAL=" + num[4].ToString();
+            numtoinfo[5] = "SENSE=" + num[5].ToString();
+            numtoinfo[6] = "LOT=" + num[6].ToString();
+            return numtoinfo;
+        }
+        public string[] info_chstr(int[] num1,int[] num2)
+        {
+            string[] chestr = new string[10];
+            chestr[0] = "RV="+ num1[0].ToString();
+            chestr[1] = "OV=" + num1[1].ToString();
+            chestr[2] = "OC=" + num1[2].ToString();
+            chestr[3] = "OP=" + num1[3].ToString();
+            chestr[4] = "OH=" + num1[4].ToString();
+            chestr[5] = "SV=" + num1[5].ToString();
+            chestr[6] = "CC=" + num1[6].ToString();
+            chestr[7] = "CV=" + num1[7].ToString();
+            chestr[8] = "CP=" + num2[0].ToString();
+            chestr[9] = "CR=" + num2[1].ToString();
+            return chestr;
+        }
+        public void recevie_verify(byte byte_verify,int start = 0)//该方法是为了检验发回的校验码是否成功
+        {
+            
+            string temp = "";
+            int check_value = 0;
+            if(start == 4)
+            {
+                temp = byte_verify.ToString("X2");
+                check_value = Convert.ToInt32(temp, 16);
+                if (check_value == 144)
+                {
+                    
+                    MessageBox.Show("校验和错误");
 
+                }
+                else if (check_value == 160)
+                {
+                  
+                    MessageBox.Show("参数错误或参数溢出");
+                }
+                else if (check_value == 176)
+                {
+                   
+                    MessageBox.Show("命令不能被执行");
+                }
+                else if (check_value == 192)
+                {
+                   
+                    MessageBox.Show("命令无效");
+                }
+                else if (check_value == 128)
+                {
+                    MessageBox.Show("成功");
+                    
+                }
+
+            }
+         
+        
+        }
         private void comopen_Click(object sender, EventArgs e)
         {
             if(comm.IsOpen)
@@ -621,6 +1092,22 @@ namespace serialcom
             {
                 hexstring = Dectohex("", 63, Mode_read);//读取负载相关状态
             }
+            else if (read_selec.SelectedItem == read_selec.Items[11])
+            {
+                hexstring = Dectohex("", 19, Mode_read);//读取负载动态电流参数值
+            }
+            else if (read_selec.SelectedItem == read_selec.Items[12])
+            {
+                hexstring = Dectohex("", 21, Mode_read);//读取负载动态电压参数值
+            }
+            else if (read_selec.SelectedItem == read_selec.Items[13])
+            {
+                hexstring = Dectohex("", 23, Mode_read);//读取负载动态功率参数值
+            }
+            else if (read_selec.SelectedItem == read_selec.Items[14])
+            {
+                hexstring = Dectohex("", 25, Mode_read);//读取负载动态电阻参数值
+            }
 
 
             //数值输入
@@ -657,7 +1144,52 @@ namespace serialcom
                 hexstring = Dectohex(staticnum.Text, 46, Mode_set);//设置定电压模式下的最小电压值
             }
 
+            //动态数值输入
+            if(dynamic_selec.SelectedItem==dynamic_selec.Items[0])
+            {
+                if (dynamic_check.SelectedItem == dynamic_check.Items[0])
+                    hexstring = dynamictran(18, V_A.Text, T_A.Text, V_B.Text, T_B.Text, 0) ;
+                else if(dynamic_check.SelectedItem == dynamic_check.Items[1])
+                    hexstring = dynamictran(18, V_A.Text, T_A.Text, V_B.Text, T_B.Text, 1);
+                else if (dynamic_check.SelectedItem == dynamic_check.Items[2])
+                    hexstring = dynamictran(18, V_A.Text, T_A.Text, V_B.Text, T_B.Text, 2);
+                else if (dynamic_check.SelectedItem == dynamic_check.Items[3])
+                    hexstring = dynamictran(18, V_A.Text, T_A.Text, V_B.Text, T_B.Text, 3);
 
+            }
+            else if(dynamic_selec.SelectedItem==dynamic_selec.Items[1])
+            {
+                if (dynamic_check.SelectedItem == dynamic_check.Items[0])
+                    hexstring = dynamictran(20, V_A.Text, T_A.Text, V_B.Text, T_B.Text, 0) ;
+                else if (dynamic_check.SelectedItem == dynamic_check.Items[1])
+                    hexstring = dynamictran(20, V_A.Text, T_A.Text, V_B.Text, T_B.Text, 1);
+                else if (dynamic_check.SelectedItem == dynamic_check.Items[2])
+                    hexstring = dynamictran(20, V_A.Text, T_A.Text, V_B.Text, T_B.Text, 2);
+                else if (dynamic_check.SelectedItem == dynamic_check.Items[2])
+                    hexstring = dynamictran(20, V_A.Text, T_A.Text, V_B.Text, T_B.Text, 3);
+            }
+            else if (dynamic_selec.SelectedItem == dynamic_selec.Items[2])
+            {
+                if (dynamic_check.SelectedItem == dynamic_check.Items[0])
+                    hexstring = dynamictran(22, V_A.Text, T_A.Text, V_B.Text, T_B.Text,0);
+                else if (dynamic_check.SelectedItem == dynamic_check.Items[1])
+                    hexstring = dynamictran(22, V_A.Text, T_A.Text, V_B.Text, T_B.Text, 1);
+                else if (dynamic_check.SelectedItem == dynamic_check.Items[2])
+                    hexstring = dynamictran(22, V_A.Text, T_A.Text, V_B.Text, T_B.Text, 2);
+                else if (dynamic_check.SelectedItem == dynamic_check.Items[3])
+                    hexstring = dynamictran(22, V_A.Text, T_A.Text, V_B.Text, T_B.Text, 3);
+            }
+            else if (dynamic_selec.SelectedItem == dynamic_selec.Items[3])
+            {
+                if (dynamic_check.SelectedItem == dynamic_check.Items[0])
+                    hexstring = dynamictran(24, V_A.Text, T_A.Text, V_B.Text, T_B.Text,0);
+                else if (dynamic_check.SelectedItem == dynamic_check.Items[1])
+                    hexstring = dynamictran(24, V_A.Text, T_A.Text, V_B.Text, T_B.Text, 1);
+                else if (dynamic_check.SelectedItem == dynamic_check.Items[2])
+                    hexstring = dynamictran(24, V_A.Text, T_A.Text, V_B.Text, T_B.Text, 2);
+                else if (dynamic_check.SelectedItem == dynamic_check.Items[3])
+                    hexstring = dynamictran(24, V_A.Text, T_A.Text, V_B.Text, T_B.Text, 3);
+            }
 
             byte[] btext = new byte[hexstring.Length / 2];
             for (int i = 0; i < hexstring.Length / 2; i++)
@@ -678,6 +1210,8 @@ namespace serialcom
             dynamic_selec.SelectedIndex = -1;
             read_selec.SelectedIndex = -1;
             staticnum.Clear();
+            reset_dynamic();
+            dynamic_check.Enabled = false;
             if (mode_selec.SelectedItem == mode_selec.Items[0])//负载输入状态
             {
                 elec_switch.Enabled = true;
@@ -746,9 +1280,11 @@ namespace serialcom
             dynamic_selec.SelectedIndex = -1;
             mode_selec.SelectedIndex = -1;
             staticnum.Clear();
+            reset_dynamic();
             elec_switch.Enabled = false;
             selec_elec.Enabled = false;
             local_permit.Enabled = false;
+            dynamic_check.Enabled = false;
         }
 
         private void dynamic_selec_SelectedIndexChanged(object sender, EventArgs e)
@@ -756,22 +1292,46 @@ namespace serialcom
             controlbox.SelectedIndex = -1;
             read_selec.SelectedIndex = -1;
             mode_selec.SelectedIndex = -1;
+            staticnum.Enabled = false;
             staticnum.Clear();
+           
             elec_switch.Enabled = false;
             selec_elec.Enabled = false;
             local_permit.Enabled = false;
+           
         }
-
+        public void reset_dynamic()
+        {
+            V_A.Clear();
+            V_A.Enabled = false;
+            T_A.Clear();
+            T_A.Enabled = false;
+            V_B.Clear();
+            V_B.Enabled = false;
+            T_B.Clear();
+            T_B.Enabled = false;
+        }
         private void controlbox_SelectedIndexChanged(object sender, EventArgs e)
         {
             read_selec.SelectedIndex = -1;
             dynamic_selec.SelectedIndex = -1;
             mode_selec.SelectedIndex = -1;
+            reset_dynamic();
             elec_switch.Enabled = false;
             selec_elec.Enabled = false;
             local_permit.Enabled = false;
+            dynamic_check.Enabled = false;
         }
 
-    
+        private void dynamic_check_ItemCheck(object sender, ItemCheckEventArgs e)
+        {
+            for (int i = 0; i < dynamic_check.Items.Count; i++)
+            {
+                if (i != e.Index)
+                {
+                    dynamic_check.SetItemCheckState(i, System.Windows.Forms.CheckState.Unchecked);
+                }
+            }
+        }
     }
 }

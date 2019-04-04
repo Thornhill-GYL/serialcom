@@ -58,6 +58,8 @@
             this.test = new System.Windows.Forms.Button();
             this.controlbox = new System.Windows.Forms.ComboBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.label12 = new System.Windows.Forms.Label();
+            this.staticnum = new System.Windows.Forms.TextBox();
             this.label11 = new System.Windows.Forms.Label();
             this.read_selec = new System.Windows.Forms.ComboBox();
             this.label10 = new System.Windows.Forms.Label();
@@ -68,8 +70,15 @@
             this.elec_switch = new System.Windows.Forms.CheckedListBox();
             this.selec_elec = new System.Windows.Forms.CheckedListBox();
             this.label8 = new System.Windows.Forms.Label();
-            this.staticnum = new System.Windows.Forms.TextBox();
-            this.label12 = new System.Windows.Forms.Label();
+            this.dynamic_check = new System.Windows.Forms.CheckedListBox();
+            this.V_A = new System.Windows.Forms.TextBox();
+            this.label13 = new System.Windows.Forms.Label();
+            this.T_A = new System.Windows.Forms.TextBox();
+            this.label14 = new System.Windows.Forms.Label();
+            this.V_B = new System.Windows.Forms.TextBox();
+            this.label15 = new System.Windows.Forms.Label();
+            this.T_B = new System.Windows.Forms.TextBox();
+            this.label16 = new System.Windows.Forms.Label();
             this.groupBox2.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
@@ -400,6 +409,15 @@
             this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox1.Controls.Add(this.label16);
+            this.groupBox1.Controls.Add(this.T_B);
+            this.groupBox1.Controls.Add(this.label15);
+            this.groupBox1.Controls.Add(this.V_B);
+            this.groupBox1.Controls.Add(this.label14);
+            this.groupBox1.Controls.Add(this.T_A);
+            this.groupBox1.Controls.Add(this.label13);
+            this.groupBox1.Controls.Add(this.V_A);
+            this.groupBox1.Controls.Add(this.dynamic_check);
             this.groupBox1.Controls.Add(this.label12);
             this.groupBox1.Controls.Add(this.staticnum);
             this.groupBox1.Controls.Add(this.label11);
@@ -428,10 +446,26 @@
             this.groupBox1.TabIndex = 18;
             this.groupBox1.TabStop = false;
             // 
+            // label12
+            // 
+            this.label12.AutoSize = true;
+            this.label12.Location = new System.Drawing.Point(13, 308);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(112, 15);
+            this.label12.TabIndex = 39;
+            this.label12.Text = "静态数值设置：";
+            // 
+            // staticnum
+            // 
+            this.staticnum.Location = new System.Drawing.Point(147, 305);
+            this.staticnum.Name = "staticnum";
+            this.staticnum.Size = new System.Drawing.Size(100, 25);
+            this.staticnum.TabIndex = 38;
+            // 
             // label11
             // 
             this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(242, 93);
+            this.label11.Location = new System.Drawing.Point(233, 93);
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(82, 15);
             this.label11.TabIndex = 37;
@@ -451,7 +485,11 @@
             "负载模式",
             "在定电压模式下的最小电压值",
             "远程测量模式",
-            "读取负载相关状态"});
+            "读取负载相关状态",
+            "动态电流参数值",
+            "动态电压参数值",
+            "动态功率参数值",
+            "动态电阻参数值"});
             this.read_selec.Location = new System.Drawing.Point(322, 88);
             this.read_selec.Name = "read_selec";
             this.read_selec.Size = new System.Drawing.Size(121, 23);
@@ -470,6 +508,11 @@
             // dynamic_selec
             // 
             this.dynamic_selec.FormattingEnabled = true;
+            this.dynamic_selec.Items.AddRange(new object[] {
+            "电流参数",
+            "电压参数",
+            "功率参数",
+            "电阻参数"});
             this.dynamic_selec.Location = new System.Drawing.Point(100, 165);
             this.dynamic_selec.Name = "dynamic_selec";
             this.dynamic_selec.Size = new System.Drawing.Size(121, 23);
@@ -550,21 +593,83 @@
             this.label8.TabIndex = 28;
             this.label8.Text = "设置数值：";
             // 
-            // staticnum
+            // dynamic_check
             // 
-            this.staticnum.Location = new System.Drawing.Point(158, 319);
-            this.staticnum.Name = "staticnum";
-            this.staticnum.Size = new System.Drawing.Size(100, 25);
-            this.staticnum.TabIndex = 38;
+            this.dynamic_check.CheckOnClick = true;
+            this.dynamic_check.FormattingEnabled = true;
+            this.dynamic_check.Items.AddRange(new object[] {
+            "continues",
+            "pulse",
+            "toggled"});
+            this.dynamic_check.Location = new System.Drawing.Point(289, 205);
+            this.dynamic_check.Name = "dynamic_check";
+            this.dynamic_check.Size = new System.Drawing.Size(120, 84);
+            this.dynamic_check.TabIndex = 40;
+            this.dynamic_check.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.dynamic_check_ItemCheck);
             // 
-            // label12
+            // V_A
             // 
-            this.label12.AutoSize = true;
-            this.label12.Location = new System.Drawing.Point(13, 329);
-            this.label12.Name = "label12";
-            this.label12.Size = new System.Drawing.Size(112, 15);
-            this.label12.TabIndex = 39;
-            this.label12.Text = "静态数值设置：";
+            this.V_A.Location = new System.Drawing.Point(147, 348);
+            this.V_A.Name = "V_A";
+            this.V_A.Size = new System.Drawing.Size(100, 25);
+            this.V_A.TabIndex = 41;
+            // 
+            // label13
+            // 
+            this.label13.AutoSize = true;
+            this.label13.Location = new System.Drawing.Point(13, 358);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(105, 15);
+            this.label13.TabIndex = 42;
+            this.label13.Text = "A电类值设置：";
+            // 
+            // T_A
+            // 
+            this.T_A.Location = new System.Drawing.Point(147, 386);
+            this.T_A.Name = "T_A";
+            this.T_A.Size = new System.Drawing.Size(100, 25);
+            this.T_A.TabIndex = 43;
+            // 
+            // label14
+            // 
+            this.label14.AutoSize = true;
+            this.label14.Location = new System.Drawing.Point(12, 396);
+            this.label14.Name = "label14";
+            this.label14.Size = new System.Drawing.Size(105, 15);
+            this.label14.TabIndex = 44;
+            this.label14.Text = "A时间值设置：";
+            // 
+            // V_B
+            // 
+            this.V_B.Location = new System.Drawing.Point(364, 348);
+            this.V_B.Name = "V_B";
+            this.V_B.Size = new System.Drawing.Size(100, 25);
+            this.V_B.TabIndex = 45;
+            // 
+            // label15
+            // 
+            this.label15.AutoSize = true;
+            this.label15.Location = new System.Drawing.Point(253, 358);
+            this.label15.Name = "label15";
+            this.label15.Size = new System.Drawing.Size(105, 15);
+            this.label15.TabIndex = 46;
+            this.label15.Text = "B电类值设置：";
+            // 
+            // T_B
+            // 
+            this.T_B.Location = new System.Drawing.Point(364, 385);
+            this.T_B.Name = "T_B";
+            this.T_B.Size = new System.Drawing.Size(100, 25);
+            this.T_B.TabIndex = 47;
+            // 
+            // label16
+            // 
+            this.label16.AutoSize = true;
+            this.label16.Location = new System.Drawing.Point(256, 394);
+            this.label16.Name = "label16";
+            this.label16.Size = new System.Drawing.Size(105, 15);
+            this.label16.TabIndex = 48;
+            this.label16.Text = "B时间值设置：";
             // 
             // Form1
             // 
@@ -640,6 +745,15 @@
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.Label label12;
         private System.Windows.Forms.TextBox staticnum;
+        private System.Windows.Forms.CheckedListBox dynamic_check;
+        private System.Windows.Forms.Label label16;
+        private System.Windows.Forms.TextBox T_B;
+        private System.Windows.Forms.Label label15;
+        private System.Windows.Forms.TextBox V_B;
+        private System.Windows.Forms.Label label14;
+        private System.Windows.Forms.TextBox T_A;
+        private System.Windows.Forms.Label label13;
+        private System.Windows.Forms.TextBox V_A;
     }
 }
 
